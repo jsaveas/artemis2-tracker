@@ -756,12 +756,11 @@
         <div class="telem-bar-wrap"><div class="telem-bar dist-moon" id="bar-moon" style="width:0%"></div></div>
       </div>
       <div class="telem-cell">
-        <span class="telem-icon">⚡</span>
-        <div class="telem-label">Current Speed</div>
-        <div class="telem-value" style="font-size:13px; color:var(--text-dim); padding: 6px 0;">See NASA AROW</div>
-        <div class="telem-unit" style="margin-top:6px;">
-          <a href="https://www.nasa.gov/missions/artemis/artemis-2/track-nasas-artemis-ii-mission-in-real-time/" target="_blank" style="color:var(--accent-cyan); font-size:12px;">📡 View live on NASA AROW ↗</a>
-        </div>
+        <span class="telem-icon">📡</span>
+        <div class="telem-label">Signal Delay (1-way)</div>
+        <div class="telem-value" id="speed">—</div>
+        <div class="telem-unit" id="speed-unit">seconds at speed of light</div>
+        <div class="telem-bar-wrap"><div class="telem-bar speed" id="bar-speed" style="width:0%"></div></div>
       </div>
     </div>
     <div class="telem-note">
@@ -1161,6 +1160,24 @@
 
   updateTelemetry();
   setInterval(updateTelemetry, 5000);
+
+  // ---- SIGNAL DELAY ----
+  // Speed of light = 186,282 miles per second
+  // 1-way delay = distance from Earth (miles) / 186,282
+  function updateSignalDelay() {
+    const now = Date.now();
+    const pos = interpolate(now, ANCHORS);
+    if (!pos) return;
+    const delaySeconds = pos.distEarth / 186282;
+    document.getElementById('speed').textContent = delaySeconds.toFixed(2);
+    document.getElementById('speed-unit').textContent =
+      `sec one-way · ${(delaySeconds * 2).toFixed(2)}s round trip · ~${(pos.distEarth / 186282 / 60).toFixed(2)} min`;
+    // Bar: max delay at ~252k miles = ~1.35 sec
+    document.getElementById('bar-speed').style.width = Math.min(100, (delaySeconds / 1.35) * 100) + '%';
+  }
+
+  updateSignalDelay();
+  setInterval(updateSignalDelay, 5000);
 
 
   async function fetchAIUpdate() {
