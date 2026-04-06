@@ -836,102 +836,7 @@
   <!-- MISSION TIMELINE CHECKLIST -->
   <div class="timeline-card">
     <div class="timeline-title">🧭 Mission Timeline</div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">T+00:00 · Apr 1 @ 5:35 PM CDT</div>
-        <div class="tl-label done">Liftoff — SLS fires from LC-39B, KSC</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">T+~2 min</div>
-        <div class="tl-label done">Solid Rocket Booster (SRB) separation</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">T+~8 min</div>
-        <div class="tl-label done">Main Engine Cutoff (MECO) + core stage separation</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">T+~18 min</div>
-        <div class="tl-label done">Solar array wings deployed — all 4 confirmed</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">T+~3.5 hrs</div>
-        <div class="tl-label done">Proximity ops demo — Glover manually pilots Orion around ICPS</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">Flight Day 1 — Apr 1</div>
-        <div class="tl-label done">Apogee & perigee raise burns complete — high Earth orbit achieved</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">✅</span>
-      <div class="tl-content">
-        <div class="tl-time">Flight Day 2 — Apr 2 @ 6:49 PM CDT</div>
-        <div class="tl-label done">🔥 TLI burn — 5 min 50 sec · 1,274 ft/sec ΔV · Orion breaks Earth orbit</div>
-      </div>
-    </div>
-
-    <div class="timeline-item is-current">
-      <span class="tl-status">🔄</span>
-      <div class="tl-content">
-        <div class="tl-time">Flight Day 3 — Apr 3 (NOW)</div>
-        <div class="tl-label current"><span class="pulse-dot"></span>Outbound coast to Moon · Crew operations, medical checks, photography practice</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">⏳</span>
-      <div class="tl-content">
-        <div class="tl-time">Apr 4–5</div>
-        <div class="tl-label upcoming">Continued coast · Possible midcourse correction burns · Day 6 solar eclipse view</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">⏳</span>
-      <div class="tl-content">
-        <div class="tl-time">~April 6 — Flight Day 6</div>
-        <div class="tl-label upcoming">🌙 Lunar flyby — far side photography · Solar eclipse from space · Closest approach</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">⏳</span>
-      <div class="tl-content">
-        <div class="tl-time">Apr 7–9</div>
-        <div class="tl-label upcoming">Return coast to Earth — lunar gravity slingshot trajectory</div>
-      </div>
-    </div>
-
-    <div class="timeline-item">
-      <span class="tl-status">⏳</span>
-      <div class="tl-content">
-        <div class="tl-time">~April 10</div>
-        <div class="tl-label upcoming">🌊 Reentry at ~25,000 mph · ~5,000°F heat shield · Splashdown — Pacific Ocean off San Diego</div>
-      </div>
-    </div>
+    <div id="mission-timeline"></div>
   </div>
 
   <!-- CREW -->
@@ -1109,9 +1014,76 @@
   updateSplashdownCountdown();
   setInterval(updateSplashdownCountdown, 1000);
 
+  // ---- DYNAMIC MISSION TIMELINE ----
+  const TIMELINE_ITEMS = [
+    { utc: Date.UTC(2026,3,1,22,35,12),  time:'T+00:00 · Apr 1 @ 5:35 PM CDT',          label:'Liftoff — SLS fires from LC-39B, KSC' },
+    { utc: Date.UTC(2026,3,1,22,37,0),   time:'T+~2 min',                                label:'Solid Rocket Booster (SRB) separation' },
+    { utc: Date.UTC(2026,3,1,22,43,0),   time:'T+~8 min',                                label:'Main Engine Cutoff (MECO) + core stage separation' },
+    { utc: Date.UTC(2026,3,1,22,53,0),   time:'T+~18 min',                               label:'Solar array wings deployed — all 4 confirmed' },
+    { utc: Date.UTC(2026,3,2,2,5,0),     time:'T+~3.5 hrs',                              label:'Proximity ops demo — Glover manually pilots Orion around ICPS' },
+    { utc: Date.UTC(2026,3,2,6,0,0),     time:'Flight Day 1 — Apr 1',                    label:'Apogee & perigee raise burns complete — high Earth orbit achieved' },
+    { utc: Date.UTC(2026,3,2,23,49,0),   time:'Flight Day 2 — Apr 2 @ 6:49 PM CDT',     label:'🔥 TLI burn — 5 min 50 sec · 1,274 ft/sec ΔV · Orion breaks Earth orbit' },
+    { utc: Date.UTC(2026,3,3,6,0,0),     time:'Flight Days 3–5 — Apr 3–5',              label:'Outbound coast · Crew ops, suit demos, manual piloting tests, lunar flyby prep' },
+    { utc: Date.UTC(2026,3,6,18,45,0),   time:'Apr 6 @ 2:45 PM CDT — Flight Day 6',     label:'🌙 Lunar flyby begins — 6-hr observation window · Far side photography · Apollo 13 distance record broken' },
+    { utc: Date.UTC(2026,3,6,23,44,0),   time:'Apr 6 @ 6:44 PM CDT',                    label:"📡 ~40-min communications blackout — Orion passes behind the far side of the Moon" },
+    { utc: Date.UTC(2026,3,7,0,2,0),     time:'Apr 6 @ 7:02 PM CDT',                    label:'🌙 Closest approach — 4,070 miles from lunar surface · Max distance from Earth: 252,757 mi' },
+    { utc: Date.UTC(2026,3,7,0,25,0),    time:'Apr 6 @ 7:25 PM CDT',                    label:'📡 Signal restored — Orion reemerges · Earthrise visible · Solar eclipse begins' },
+    { utc: Date.UTC(2026,3,7,2,20,0),    time:'Apr 6 @ 9:20 PM CDT',                    label:'Lunar flyby complete — Orion on return trajectory to Earth' },
+    { utc: Date.UTC(2026,3,7,9,0,0),     time:'Apr 7–9',                                label:'Return coast to Earth — lunar gravity slingshot · Speed increasing as Earth gravity pulls Orion home' },
+    { utc: Date.UTC(2026,3,11,0,7,0),    time:'~Apr 10 @ 8:07 PM CDT',                  label:'🌊 Reentry at ~25,000 mph · ~5,000°F heat shield · Splashdown — Pacific Ocean off San Diego' },
+  ];
+
+  function renderTimeline() {
+    const now = Date.now();
+    const container = document.getElementById('mission-timeline');
+    if (!container) return;
+
+    // Find current item — last one whose utc has passed but next hasn't
+    let currentIdx = -1;
+    for (let i = 0; i < TIMELINE_ITEMS.length; i++) {
+      if (now >= TIMELINE_ITEMS[i].utc) currentIdx = i;
+    }
+
+    let html = '';
+    for (let i = 0; i < TIMELINE_ITEMS.length; i++) {
+      const item = TIMELINE_ITEMS[i];
+      const isPast    = now > TIMELINE_ITEMS[i+1]?.utc ?? now > item.utc;
+      const isCurrent = i === currentIdx && now < (TIMELINE_ITEMS[i+1]?.utc ?? Infinity);
+      const isFuture  = now < item.utc;
+
+      let icon, labelClass, itemClass = '';
+
+      if (isFuture) {
+        icon = '⏳'; labelClass = 'upcoming';
+      } else if (isCurrent) {
+        icon = '🔄'; labelClass = 'current'; itemClass = 'is-current';
+      } else {
+        icon = '✅'; labelClass = 'done';
+      }
+
+      const pulseHtml = isCurrent ? '<span class="pulse-dot"></span>' : '';
+
+      html += `
+      <div class="timeline-item ${itemClass}">
+        <span class="tl-status">${icon}</span>
+        <div class="tl-content">
+          <div class="tl-time">${item.time}</div>
+          <div class="tl-label ${labelClass}">${pulseHtml}${item.label}</div>
+        </div>
+      </div>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  renderTimeline();
+  setInterval(renderTimeline, 60000); // re-render every minute
+
+
+
   // ---- LUNAR FLYBY COUNTDOWN ----
   // April 6, 2026 ~20:00 UTC (closest approach)
-  const FLYBY_UTC = Date.UTC(2026, 3, 6, 20, 0, 0);
+  const FLYBY_UTC = Date.UTC(2026, 3, 6, 19, 45, 0); // Apr 6 2:45 PM CDT = 19:45 UTC
 
   function updateFlybyCountdown() {
     const now = Date.now();
