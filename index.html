@@ -789,14 +789,14 @@
   <!-- AI LIVE INTEL REFRESH -->
   <div class="refresh-section">
     <div class="refresh-header">
-      <div class="refresh-title">🤖 AI Live Intel</div>
-      <button class="refresh-btn" id="refresh-btn" onclick="fetchAIUpdate()">⟳ REFRESH NOW</button>
+      <div class="refresh-title">📡 NASA Mission Updates</div>
+      <button class="refresh-btn" id="refresh-btn" onclick="fetchNASAFeed()">⟳ REFRESH NOW</button>
     </div>
     <div class="ai-badge">
-      <span>●</span> Powered by Claude · Web-aware
+      <span>●</span> Live · NASA Artemis Blog · Official Source
     </div>
     <div id="ai-update-text">
-      Click <strong>REFRESH NOW</strong> to pull the latest Artemis II mission intel from Claude's live web search. Each refresh fetches current status, any new milestones, anomalies, or crew updates.
+      Click <strong>REFRESH NOW</strong> to pull the latest official NASA Artemis II mission updates.
     </div>
     <div class="last-refreshed" id="last-refreshed">Last refreshed: —</div>
   </div>
@@ -1226,7 +1226,7 @@
   setInterval(updateSignalDelay, 5000);
 
 
-  async function fetchAIUpdate() {
+  async function fetchNASAFeed() {
     const btn = document.getElementById('refresh-btn');
     const textEl = document.getElementById('ai-update-text');
     const lastEl = document.getElementById('last-refreshed');
@@ -1234,70 +1234,67 @@
     btn.disabled = true;
     btn.textContent = '⟳ FETCHING...';
     textEl.className = 'loading';
-    textEl.innerHTML = '<span class="spinner"></span>Querying Claude for latest Artemis II intel...';
+    textEl.innerHTML = '<span class="spinner"></span>Fetching latest NASA Artemis blog posts...';
 
-    const today = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
-
-    const prompt = `You are a mission briefing AI for the Artemis II moon mission. Today is ${today}.
-
-Using your web search capability, search for the LATEST Artemis II news and mission status right now. Search for:
-1. "Artemis 2 latest update ${today}"
-2. "Artemis II flight day status"
-3. Any recent NASA blog posts or news
-
-Then write a CONCISE mission intel briefing (3-5 sentences) covering:
-- Current mission phase and what the crew is doing RIGHT NOW
-- Any new milestones completed or anomalies noted
-- What's coming up next (next 12-24 hours)
-- One crew quote if available
-
-Format: Plain prose, no markdown headers. Be specific with times and facts. Start with the most current status.`;
+    // rss2json converts NASA RSS to JSON with CORS support — free up to 10k req/month
+    const RSS_URL = 'https://www.nasa.gov/blogs/missions/feed/';
+    const API_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}&count=5`;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
 
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-      const data = await response.json();
-
-      // Extract text responses
-      const textBlocks = data.content
-        .filter(item => item.type === "text")
-        .map(item => item.text)
-        .join("\n");
-
-      if (textBlocks.trim()) {
-        textEl.className = '';
-        textEl.innerHTML = textBlocks
-          .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent-cyan)">$1</strong>')
-          .replace(/\n\n/g, '<br><br>')
-          .replace(/\n/g, '<br>');
-      } else {
-        textEl.className = '';
-        textEl.innerHTML = '<span style="color:var(--accent-amber)">⚠ No text response returned. Check NASA blog directly.</span>';
+      if (data.status !== 'ok' || !data.items || data.items.length === 0) {
+        throw new Error('No feed items returned');
       }
 
-      lastEl.textContent = `Last refreshed: ${new Date().toLocaleTimeString()} — ${today}`;
+      // Filter to Artemis II posts only
+      const artemisItems = data.items.filter(item =>
+        item.title.toLowerCase().includes('artemis')
+      ).slice(0, 4);
+
+      const items = artemisItems.length > 0 ? artemisItems : data.items.slice(0, 4);
+
+      let html = '';
+      for (const item of items) {
+        const date = new Date(item.pubDate).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        // Strip HTML tags from description and truncate
+        const desc = item.description
+          .replace(/<[^>]*>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .trim()
+          .slice(0, 200);
+
+        html += `
+          <div style="margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid rgba(0,180,255,0.1);">
+            <div style="font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text-dim); margin-bottom:4px;">${date}</div>
+            <a href="${item.link}" target="_blank" style="color:var(--accent-cyan); font-size:14px; font-weight:600; text-decoration:none; line-height:1.4; display:block; margin-bottom:4px;">${item.title}</a>
+            <div style="font-size:13px; color:var(--text-dim); line-height:1.5;">${desc}${desc.length >= 200 ? '...' : ''}</div>
+          </div>`;
+      }
+
+      textEl.className = '';
+      textEl.innerHTML = html;
+      lastEl.textContent = `Last refreshed: ${new Date().toLocaleTimeString()} · Source: NASA Artemis Blog`;
 
     } catch (err) {
       textEl.className = '';
-      textEl.innerHTML = `<span style="color:var(--accent-red)">⚠ Error fetching update: ${err.message}</span><br><br>
-        Visit <a href="https://www.nasa.gov/blogs/missions/" target="_blank" style="color:var(--accent-cyan)">NASA Mission Blog</a> for live updates.`;
+      textEl.innerHTML = `<span style="color:var(--accent-red)">⚠ Could not load feed: ${err.message}</span><br><br>
+        <a href="https://www.nasa.gov/blogs/missions/" target="_blank" style="color:var(--accent-cyan)">📋 Read NASA Artemis Blog directly ↗</a>`;
       lastEl.textContent = `Last attempt: ${new Date().toLocaleTimeString()} (failed)`;
     }
 
     btn.disabled = false;
     btn.textContent = '⟳ REFRESH NOW';
   }
+
+  // Auto-fetch on page load
+  fetchNASAFeed();
 </script>
 </body>
 </html>
